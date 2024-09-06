@@ -1,8 +1,15 @@
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Start from "./components/start/Start";
+
 const App = () => {
   return (
-    <div>
-      <img src="src/assets/imgs/3.png" alt="" />
-    </div>
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Start />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 };
 
