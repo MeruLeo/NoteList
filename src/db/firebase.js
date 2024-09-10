@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-// کانفیگ Firebase پروژه شما
 const firebaseConfig = {
   apiKey: "AIzaSyB9vwnSyWbhgzv1_FW7j7qWwqbC4pHUGEQ",
   authDomain: "notelist-fe180.firebaseapp.com",
@@ -12,10 +11,8 @@ const firebaseConfig = {
   measurementId: "G-LRB5KJG6JJ",
 };
 
-// مقداردهی اولیه Firebase
 const app = initializeApp(firebaseConfig);
 
-// دسترسی به Firestore
 const db = getFirestore(app);
 
 export default db;

@@ -10,6 +10,10 @@
   }
 }
 
+body {
+  @apply bg-half-dark;
+}
+
 .background {
   position: fixed;
   width: 100vw;
