@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { collection, getDoc, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  getDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import db from "../../db/firebase";
 import Cookies from "js-cookie";
 import "./Profile.css";
@@ -8,6 +14,7 @@ import Notification from "../notifcation/Notifcation";
 import { RotatingLines } from "react-loader-spinner";
 import TwoOption from "../pop_up/two_option/TwoOption";
 import { useNavigate } from "react-router-dom";
+import html2canvas from "html2canvas";
 
 const Profile = () => {
   const [user, setUser] = useState({});
@@ -27,34 +34,26 @@ const Profile = () => {
   const [editEmail, setEditEmail] = useState("");
   const [editPassword, setEditPassword] = useState("");
 
+  const [openShareCard, setOpenShareCaed] = useState(false);
+
   const navigate = useNavigate();
 
+  // -useEffects-
+  // open user menu
   useEffect(() => {
     if (openUserMenu) {
       setIsUserMenuVisible(true);
     }
   }, [openUserMenu]);
 
+  // open settings menu
   useEffect(() => {
     if (openSettings) {
       setIsSettingsVisible(true);
     }
   }, [openSettings]);
 
-  const handleUserMenuClose = () => {
-    setOpenUserMenu(false);
-    setTimeout(() => {
-      setIsUserMenuVisible(false);
-    }, 500);
-  };
-
-  const handleSettingsMenuClose = () => {
-    setOpenSettings(false);
-    setTimeout(() => {
-      setIsSettingsVisible(false);
-    }, 500);
-  };
-
+  // close user menu at open popup
   useEffect(() => {
     if (popupState.show) {
       setOpenUserMenu(false);
@@ -62,6 +61,23 @@ const Profile = () => {
     }
   }, [popupState.show]);
 
+  // close settings menu at open popup
+  useEffect(() => {
+    if (twoOptionState.show) {
+      setOpenUserMenu(false);
+      setIsUserMenuVisible(false);
+    }
+  }, [twoOptionState.show]);
+
+  // close settings menu at open share card
+  useEffect(() => {
+    if (openShareCard) {
+      setOpenSettings(false);
+      setIsSettingsVisible(false);
+    }
+  }, [openShareCard]);
+
+  // fetch main user on state {user}
   useEffect(() => {
     const fetchUser = async () => {
       const userId = Cookies.get("user_id");
@@ -94,6 +110,20 @@ const Profile = () => {
       setTimeout(() => setOpenUserMenu(false), 100);
     }
   }, [openSettings]);
+
+  const handleUserMenuClose = () => {
+    setOpenUserMenu(false);
+    setTimeout(() => {
+      setIsUserMenuVisible(false);
+    }, 500);
+  };
+
+  const handleSettingsMenuClose = () => {
+    setOpenSettings(false);
+    setTimeout(() => {
+      setIsSettingsVisible(false);
+    }, 500);
+  };
 
   const changeUserName = async (newName, setUser) => {
     setIsLoading(true);
@@ -144,6 +174,7 @@ const Profile = () => {
       }, 4000);
     } finally {
       setIsLoading(false);
+      handlePopupClose();
     }
   };
 
@@ -162,7 +193,7 @@ const Profile = () => {
         });
         setTimeout(() => {
           setNotification(null);
-          navigate("/"); // هدایت به صفحه اصلی
+          navigate("/");
         }, 4000);
       }
     } catch (error) {
@@ -177,12 +208,13 @@ const Profile = () => {
       }, 4000);
     } finally {
       setIsLoading(false);
+      handlePopupClose();
     }
   };
 
   const handleLogout = () => {
     Cookies.remove("user_id");
-    navigate("/"); // هدایت به صفحه اصلی
+    navigate("/");
   };
 
   const changeUserEmail = async (newEmail, setUser) => {
@@ -225,6 +257,7 @@ const Profile = () => {
       }, 4000);
     } finally {
       setIsLoading(false);
+      handlePopupClose();
     }
   };
 
@@ -310,22 +343,14 @@ const Profile = () => {
   const settings = [
     {
       id: 1,
-      title: "میزان صدا",
+      title: "اشتراک گذاری پروفایل",
       icon: (
-        <i className="fi fi-rr-volume flex justify-center items-center"></i>
+        <i className="fi fi-rr-share-square flex justify-center items-center"></i>
       ),
-      clickEvent: "",
+      clickEvent: () => setOpenShareCaed(true),
     },
     {
       id: 2,
-      title: "اتصال به هدست",
-      icon: (
-        <i className="fi fi-rr-headphones flex justify-center items-center"></i>
-      ),
-      clickEvent: "",
-    },
-    {
-      id: 3,
       title: "تغییر پس زمینه",
       icon: (
         <i className="fi fi-rr-picture flex justify-center items-center"></i>
@@ -413,7 +438,7 @@ const Profile = () => {
             setOpenSettings(!openSettings);
             setOpenUserMenu(false);
           }}
-          className="bg-org-dark w-12 h-12 rounded-full text-xl"
+          className="bg-org-dark w-12 h-12 rounded-full text-xl transition-all duration-200 hover:bg-org-color hover:text-org-dark"
         >
           <i className="fi fi-rr-settings flex justify-center items-center"></i>
         </button>
@@ -435,7 +460,10 @@ const Profile = () => {
           ))}
         </ul>
 
-        <button className="bg-org-dark w-12 mr-2 h-12 rounded-full text-xl">
+        <button
+          onClick={() => history.back()}
+          className="bg-org-dark w-12 mr-2 h-12 rounded-full text-xl transition-all duration-200 hover:bg-org-color hover:text-org-dark"
+        >
           <i className="fi fi-rr-angle-small-left flex justify-center items-center"></i>
         </button>
       </section>
@@ -444,9 +472,97 @@ const Profile = () => {
 
   const handlePopupClose = () => setPopupState({ show: false, type: "" });
 
+  const ShareProfile = ({ userName, shareID }) => {
+    const copyToClipboard = () => {
+      navigator.clipboard.writeText(shareID).then(() => {
+        setNotification({
+          icon: "check",
+          title: "موفق",
+          content: "آیدی پروفایل شما با موفقیت کپی شد",
+          iconColor: "text-green-600",
+        });
+        setTimeout(() => {
+          setNotification(null);
+        }, 4000);
+      });
+    };
+
+    const downloadAsImage = () => {
+      const element = document.getElementById("share-profile");
+      html2canvas(element).then((canvas) => {
+        const link = document.createElement("a");
+        link.download = `profile-${userName}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    };
+
+    return (
+      <div
+        className={`absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] ${
+          openShareCard ? "block" : "hidden"
+        }`}
+      >
+        <header className="flex justify-between items-center">
+          <div className="bg-light-dark w-fit rounded-full p-1 mb-4 mr-4 border-1 border-org-color">
+            <button
+              className="bg-half-dark text-org-color p-2 rounded-full text-center transition-all duration-200 hover:bg-org-color hover:text-half-dark"
+              onClick={downloadAsImage}
+            >
+              <i className="fi fi-rr-download text-2xl flex justify-center items-center"></i>
+            </button>
+            <button
+              className="bg-half-dark text-org-color p-2 rounded-full mr-2 text-center transition-all duration-200 hover:bg-org-color hover:text-half-dark"
+              onClick={copyToClipboard}
+            >
+              <i className="fi fi-rr-copy-alt text-2xl flex justify-center items-center"></i>
+            </button>
+          </div>
+          <button
+            onClick={() => setOpenShareCaed(false)}
+            className="bg-red-500 text-org-dark ml-4 p-2 rounded-full mr-2 text-center transition-all duration-200 hover:scale-95"
+          >
+            <i className="fi fi-rr-cross flex justify-center items-center"></i>
+          </button>
+        </header>
+        <div
+          id="share-profile"
+          className="bg-light-dark border-t-1 border-l-1 border-org-color p-4 rounded-[2.5rem]"
+        >
+          <main>
+            <img
+              src="src/assets/imgs/NoteList.png"
+              className="w-64 h-64"
+              alt="note list"
+            />
+            <div className="text-center">
+              <div className="my-4 flex justify-center items-center">
+                <img
+                  src="src/assets/imgs/play_Note.png"
+                  className="w-7 h-7 mt-1 ml-2"
+                  alt="note list"
+                />
+                <h4 className="font-bold text-3xl text-org-light">
+                  {userName}
+                </h4>
+                <img
+                  src="src/assets/imgs/play_Note.png"
+                  className="w-7 h-7 rotate-180 mr-2"
+                  alt="note list"
+                />
+              </div>
+              <p className="bg-org-color p-0.5 rounded-full">{shareID}</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
       <Header user_name={user.user_name} />
+      <ShareProfile userName={user.user_name} shareID={user.share_page} />
       {popupState.show && (
         <Popup
           title={
@@ -491,18 +607,15 @@ const Profile = () => {
             popupState.type === "editName"
               ? () => {
                   changeUserName(editName, setUser);
-                  handlePopupClose();
                   setEditName("");
                 }
               : popupState.type === "editEmail"
               ? () => {
                   changeUserEmail(editEmail, setUser);
-                  handlePopupClose();
                   setEditEmail("");
                 }
               : () => {
                   changeUserPassword(editPassword, setUser);
-                  handlePopupClose();
                   setEditPassword("");
                 }
           }
@@ -510,7 +623,7 @@ const Profile = () => {
         />
       )}
 
-      {twoOptionState && (
+      {twoOptionState.show && (
         <TwoOption
           title={
             twoOptionState.type === "exitAccount" ? "خروج از حساب" : "حذف حساب"
@@ -540,6 +653,7 @@ const Profile = () => {
           title={notification.title}
         />
       )}
+
       {isLoading && (
         <div className="fixed z-50 backdrop-blur-2xl p-4 rounded-full flex top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
           <RotatingLines

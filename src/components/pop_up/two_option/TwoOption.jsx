@@ -24,21 +24,13 @@ const TwoOption = ({
       </header>
       <main>
         <p className="text-org-light max-w-60 my-4 text-center">{desc}</p>
-        <div className="flex">
-          <button
-            className="w-full ml-0.5 transition-all duration-200 hover:scale-95 bg-org-color p-2 rounded-full"
-            onClick={submitData}
-          >
-            {btnTitle}
-          </button>
 
-          <button
-            className="w-full mr-0.5 text-org-light transition-all duration-200 hover:scale-95 bg-light-dark p-2 rounded-full"
-            onClick={cancel}
-          >
-            {cancelTitle}
-          </button>
-        </div>
+        <button
+          className="w-full transition-all duration-200 hover:scale-95 bg-org-color p-2 rounded-full"
+          onClick={submitData}
+        >
+          {btnTitle}
+        </button>
       </main>
     </div>
   );

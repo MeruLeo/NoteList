@@ -7,12 +7,14 @@ import FormComp from "../form/form.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import Notification from "../notifcation/Notifcation.jsx";
 import Cookies from "js-cookie";
+import { RotatingLines } from "react-loader-spinner";
 
 const Start = () => {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [users, setUsers] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -48,36 +50,52 @@ const Start = () => {
     fetchUsers();
   }, []);
 
-  const listenerlogin = (values) => {
-    const existingUser = users.find(
-      (user) =>
-        user.user_name === values.user_name &&
-        user.password === values.password,
-    );
+  const listenerlogin = async (values) => {
+    setIsLoading(true);
+    try {
+      const existingUser = users.find(
+        (user) =>
+          user.user_name === values.user_name &&
+          user.password === values.password,
+      );
 
-    if (existingUser) {
-      Cookies.set("user_id", existingUser.id, { expires: 7 });
+      if (existingUser) {
+        await Cookies.set("user_id", existingUser.id, { expires: 7 });
 
-      setNotification({
-        icon: "check",
-        title: "موفق",
-        content: "ورود شما موفقیت آمیز بود",
-        iconColor: "text-green-600",
-      });
-      setTimeout(() => {
-        setNotification(null);
-        navigate("/profile");
-      }, 4000);
-    } else {
+        setNotification({
+          icon: "check",
+          title: "موفق",
+          content: "ورود شما موفقیت آمیز بود",
+          iconColor: "text-green-600",
+        });
+        setTimeout(() => {
+          setNotification(null);
+          navigate("/profile");
+        }, 4000);
+      } else {
+        setNotification({
+          icon: "xmark",
+          title: "ناموفق",
+          content: "رمز عبور یا نام کاربری اشتباه است",
+          iconColor: "text-red-600",
+        });
+        setTimeout(() => {
+          setNotification(null);
+        }, 4000);
+      }
+    } catch {
       setNotification({
         icon: "xmark",
-        title: "ناموفق",
-        content: "رمز عبور یا نام کاربری اشتباه است",
+        title: "خطا",
+        content: "مشکلی در ورود رخ داد، لطفا دوباره تلاش کنید",
         iconColor: "text-red-600",
       });
+
       setTimeout(() => {
         setNotification(null);
       }, 4000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,7 +130,39 @@ const Start = () => {
 
   return (
     <>
-      <div className="background">{/* Background content */}</div>
+      <div className="background">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
       <div className="backdrop-blur-xl border-1 border-org-dark z-50 p-8 rounded-[3rem] flex sm:flex-row flex-col items-center justify-center top-[50%] left-[50%] translate-x-[-50%] absolute translate-y-[-50%]">
         <section className="block sm:hidden">
           <img
@@ -161,6 +211,22 @@ const Start = () => {
           iconColor={notification.iconColor}
           title={notification.title}
         />
+      )}
+      {isLoading && (
+        <div className="fixed z-50 backdrop-blur-2xl p-4 rounded-full flex top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
+          <RotatingLines
+            visible={true}
+            height="30"
+            width="30"
+            color="grey"
+            strokeWidth="5"
+            animationDuration="0.75"
+            ariaLabel="rotating-lines-loading"
+            wrapperStyle={{}}
+            strokeColor="#b6b6b6"
+            wrapperClass=""
+          />
+        </div>
       )}
     </>
   );

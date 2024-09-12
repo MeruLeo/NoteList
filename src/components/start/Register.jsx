@@ -1,18 +1,20 @@
 import LinkBtn from "../form/btn/LinkBtn";
 import { useState, useEffect } from "react";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, updateDoc } from "firebase/firestore";
 import db from "../../db/firebase.js";
 import * as Yup from "yup";
 import FormComp from "../form/form.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import Notification from "../notifcation/Notifcation.jsx";
 import Cookies from "js-cookie";
+import { RotatingLines } from "react-loader-spinner";
 
 const Register = () => {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [users, setUsers] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -57,10 +59,16 @@ const Register = () => {
       }, 4000);
     } else {
       try {
+        setIsLoading(true);
         const docRef = await addDoc(collection(db, "users"), {
           user_name: values.user_name,
           password: values.password,
           email: values.email,
+          created_at: new Date(),
+        });
+
+        await updateDoc(docRef, {
+          share_page: `${values.user_name}_${docRef.id}`,
         });
 
         Cookies.set("user_id", docRef.id, { expires: 7 });
@@ -85,6 +93,8 @@ const Register = () => {
         setTimeout(() => {
           setNotification(null);
         }, 4000);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -215,6 +225,22 @@ const Register = () => {
           iconColor={notification.iconColor}
           title={notification.title}
         />
+      )}
+      {isLoading && (
+        <div className="fixed z-50 backdrop-blur-2xl p-4 rounded-full flex top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
+          <RotatingLines
+            visible={true}
+            height="30"
+            width="30"
+            color="grey"
+            strokeWidth="5"
+            animationDuration="0.75"
+            ariaLabel="rotating-lines-loading"
+            wrapperStyle={{}}
+            strokeColor="#b6b6b6"
+            wrapperClass=""
+          />
+        </div>
       )}
     </>
   );
